@@ -1,21 +1,38 @@
-use addin1c::{name, MethodInfo, Methods, ParamValue, PropInfo, SimpleAddin, Variant};
+use std::error::Error;
+
+use addin1c::{name, MethodInfo, Methods, PropInfo, SimpleAddin, Variant, AddinError};
 
 pub struct Addin2 {
     prop1: i32,
+    last_error: Option<Box<dyn Error>>,
 }
 
 impl Addin2 {
     pub fn new() -> Addin2 {
-        Addin2 { prop1: 0 }
+        Addin2 {
+            prop1: 0,
+            last_error: None,
+        }
     }
 
-    fn method1(&mut self, param: &mut Variant, ret_value: &mut Variant) -> bool {
-        let ParamValue::I32(value) = param.get() else {
-            return false;
-        };
+    fn last_error(&mut self, value: &mut Variant) -> AddinError {
+        match &self.last_error {
+            Some(err) => value
+                .set_str1c(err.to_string().as_str())
+                .map_err(|e| e.into()),
+            None => value.set_str1c("").map_err(|e| e.into()),
+        }
+    }
+
+    fn method1(
+        &mut self,
+        param: &mut Variant,
+        ret_value: &mut Variant,
+    ) -> AddinError {
+        let value = param.get_i32()?;
         self.prop1 = value;
         ret_value.set_i32(value * 2);
-        true
+        Ok(())
     }
 
     fn method2(
@@ -23,35 +40,33 @@ impl Addin2 {
         param1: &mut Variant,
         param2: &mut Variant,
         ret_value: &mut Variant,
-    ) -> bool {
-        let ParamValue::I32(value1) = param1.get() else {
-            return false;
-        };
-        let ParamValue::I32(value2) = param2.get() else {
-            return false;
-        };
+    ) -> AddinError {
+        let value1 = param1.get_i32()?;
+        let value2 = param2.get_i32()?;
         self.prop1 = value1 + value2;
         ret_value.set_i32(self.prop1);
-        true
+        Ok(())
     }
 
-    fn set_prop1(&mut self, value: &ParamValue) -> bool {
-        let ParamValue::I32(value) = value else {
-            return false;
-        };
-        self.prop1 = *value;
-        true
+    fn set_prop1(&mut self, value: &Variant) -> AddinError {
+        let value = value.get_i32()?;
+        self.prop1 = value;
+        Ok(())
     }
 
-    fn get_prop1(&mut self, value: &mut Variant) -> bool {
+    fn get_prop1(&mut self, value: &mut Variant) -> AddinError {
         value.set_i32(self.prop1);
-        true
+        Ok(())
     }
 }
 
 impl SimpleAddin for Addin2 {
     fn name() -> &'static [u16] {
         name!("Class2")
+    }
+
+    fn save_error(&mut self, err: Option<Box<dyn Error>>) {
+        self.last_error = err;
     }
 
     fn methods() -> &'static [MethodInfo<Self>] {
@@ -68,10 +83,17 @@ impl SimpleAddin for Addin2 {
     }
 
     fn properties() -> &'static [PropInfo<Self>] {
-        &[PropInfo {
-            name: name!("Prop1"),
-            getter: Some(Self::get_prop1),
-            setter: Some(Self::set_prop1),
-        }]
+        &[
+            PropInfo {
+                name: name!("Prop1"),
+                getter: Some(Self::get_prop1),
+                setter: Some(Self::set_prop1),
+            },
+            PropInfo {
+                name: name!("LastError"),
+                getter: Some(Self::last_error),
+                setter: None,
+            },
+        ]
     }
 }

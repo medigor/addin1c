@@ -1,4 +1,4 @@
-use addin1c::{name, ParamValue, RawAddin, Tm, Variant};
+use addin1c::{name, RawAddin, Tm, Variant};
 
 const PROPS: &[&[u16]] = &[
     name!("Test"),
@@ -65,69 +65,47 @@ impl RawAddin for Addin1 {
             3 => val.set_bool(self.prop_bool),
             4 => val.set_date(self.prop_date),
             5 => {
-                let s: Vec<u16> = self.prop_str.encode_utf16().collect();
-                return val.set_str(s.as_slice());
+                return val.set_str1c(self.prop_str.as_str()).is_ok();
             }
             6 => {
-                return val.set_blob(self.prop_blob.as_slice());
+                return val.set_blob(self.prop_blob.as_slice()).is_ok();
             }
             _ => return false,
         };
         true
     }
 
-    fn set_prop_val(&mut self, num: usize, val: &ParamValue) -> bool {
+    fn set_prop_val(&mut self, num: usize, val: &Variant) -> bool {
         match num {
-            0 => match val {
-                ParamValue::I32(x) => {
-                    self.test = *x;
-                    true
-                }
-                _ => false,
-            },
-            1 => match val {
-                ParamValue::I32(x) => {
-                    self.prop_i32 = *x;
-                    true
-                }
-                _ => false,
-            },
-            2 => match val {
-                ParamValue::F64(x) => {
-                    self.prop_f64 = *x;
-                    true
-                }
-                _ => false,
-            },
-            3 => match val {
-                ParamValue::Bool(x) => {
-                    self.prop_bool = *x;
-                    true
-                }
-                _ => false,
-            },
-            4 => match val {
-                ParamValue::Date(x) => {
-                    self.prop_date = *x;
-                    true
-                }
-                _ => false,
-            },
-            5 => match val {
-                ParamValue::Str(x) => {
-                    self.prop_str = String::from_utf16(x).unwrap();
-                    true
-                }
-                _ => false,
-            },
-            6 => match val {
-                ParamValue::Blob(x) => {
-                    self.prop_blob.clear();
-                    self.prop_blob.extend_from_slice(x);
-                    true
-                }
-                _ => false,
-            },
+            0 => val.get_i32().is_ok_and(|x| {
+                self.test = x;
+                true
+            }),
+            1 => val.get_i32().is_ok_and(|x| {
+                self.prop_i32 = x;
+                true
+            }),
+            2 => val.get_f64().is_ok_and(|x| {
+                self.prop_f64 = x;
+                true
+            }),
+            3 => val.get_bool().is_ok_and(|x| {
+                self.prop_bool = x;
+                true
+            }),
+            4 => val.get_date().is_ok_and(|x| {
+                self.prop_date = x;
+                true
+            }),
+            5 => val.get_string().is_ok_and(|x| {
+                self.prop_str = x;
+                true
+            }),
+            6 => val.get_blob().is_ok_and(|x| {
+                self.prop_blob.clear();
+                self.prop_blob.extend_from_slice(x);
+                true
+            }),
             _ => false,
         }
     }
@@ -200,27 +178,24 @@ impl RawAddin for Addin1 {
             0 => {
                 let mut buf = Vec::<u16>::new();
                 for param in params {
-                    match param.get() {
-                        ParamValue::Str(x) => buf.extend_from_slice(x),
-                        _ => return false,
-                    }
+                    let Ok(x) = param.get_str1c() else {
+                        return false;
+                    };
+                    buf.extend_from_slice(x);
                 }
-                ret_value.set_str(buf.as_slice())
+                ret_value.set_str1c(buf.as_slice()).is_ok()
             }
             1 => {
                 for (i, param) in params.iter_mut().enumerate() {
-                    match param.get() {
-                        ParamValue::Empty => {
-                            if i == 0 {
-                                let s = "Return value".encode_utf16().collect::<Vec<u16>>();
-                                if !param.set_str(&s) {
-                                    return false;
-                                }
-                            } else {
-                                param.set_i32(1)
-                            }
+                    let Ok(()) = param.get_empty() else {
+                        return false;
+                    };
+                    if i == 0 {
+                        if param.set_str1c("Return value").is_err() {
+                            return false;
                         }
-                        _ => return false,
+                    } else {
+                        param.set_i32(1)
                     }
                 }
                 ret_value.set_bool(true);

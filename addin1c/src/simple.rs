@@ -1,13 +1,31 @@
-use crate::ffi::{self, ParamValue, Variant};
+use core::fmt;
+use std::error::Error;
+
+use crate::ffi::{self, Variant};
 
 #[allow(dead_code)]
 pub enum Methods<T> {
-    Method0(fn(&mut T, &mut Variant) -> bool),
-    Method1(fn(&mut T, &mut Variant, &mut Variant) -> bool),
-    Method2(fn(&mut T, &mut Variant, &mut Variant, &mut Variant) -> bool),
-    Method3(fn(&mut T, &mut Variant, &mut Variant, &mut Variant, &mut Variant) -> bool),
+    Method0(fn(&mut T, &mut Variant) -> AddinError),
+    Method1(fn(&mut T, &mut Variant, &mut Variant) -> AddinError),
+    Method2(fn(&mut T, &mut Variant, &mut Variant, &mut Variant) -> AddinError),
+    Method3(
+        fn(
+            &mut T,
+            &mut Variant,
+            &mut Variant,
+            &mut Variant,
+            &mut Variant,
+        ) -> AddinError,
+    ),
     Method4(
-        fn(&mut T, &mut Variant, &mut Variant, &mut Variant, &mut Variant, &mut Variant) -> bool,
+        fn(
+            &mut T,
+            &mut Variant,
+            &mut Variant,
+            &mut Variant,
+            &mut Variant,
+            &mut Variant,
+        ) -> AddinError,
     ),
     Method5(
         fn(
@@ -18,7 +36,7 @@ pub enum Methods<T> {
             &mut Variant,
             &mut Variant,
             &mut Variant,
-        ) -> bool,
+        ) -> AddinError,
     ),
     Method6(
         fn(
@@ -30,7 +48,7 @@ pub enum Methods<T> {
             &mut Variant,
             &mut Variant,
             &mut Variant,
-        ) -> bool,
+        ) -> AddinError,
     ),
     Method7(
         fn(
@@ -43,9 +61,22 @@ pub enum Methods<T> {
             &mut Variant,
             &mut Variant,
             &mut Variant,
-        ) -> bool,
+        ) -> AddinError,
     ),
 }
+
+#[derive(Debug)]
+struct ParamError {}
+
+impl fmt::Display for ParamError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "ParamError")
+    }
+}
+
+impl std::error::Error for ParamError {}
+
+pub type AddinError = Result<(), Box<dyn std::error::Error>>;
 
 impl<T> Methods<T> {
     fn params(&self) -> usize {
@@ -62,114 +93,119 @@ impl<T> Methods<T> {
     }
 
     #[allow(unused_variables)]
-    fn call(&self, addin: &mut T, params: &mut [Variant], val: &mut Variant) -> bool {
+    fn call(
+        &self,
+        addin: &mut T,
+        params: &mut [Variant],
+        val: &mut Variant,
+    ) -> AddinError {
         match self {
             Methods::Method0(f) => f(addin, val),
             Methods::Method1(f) => {
                 let Some((p1, params)) = params.split_first_mut() else {
-                    return false;
+                    return Err(ParamError {}.into());
                 };
                 f(addin, p1, val)
             }
             Methods::Method2(f) => {
                 let Some((p1, params)) = params.split_first_mut() else {
-                    return false;
+                    return Err(ParamError {}.into());
                 };
                 let Some((p2, params)) = params.split_first_mut() else {
-                    return false;
+                    return Err(ParamError {}.into());
                 };
                 f(addin, p1, p2, val)
             }
             Methods::Method3(f) => {
                 let Some((p1, params)) = params.split_first_mut() else {
-                    return false;
+                    return Err(ParamError {}.into());
                 };
                 let Some((p2, params)) = params.split_first_mut() else {
-                    return false;
+                    return Err(ParamError {}.into());
                 };
                 let Some((p3, params)) = params.split_first_mut() else {
-                    return false;
+                    return Err(ParamError {}.into());
                 };
                 f(addin, p1, p2, p3, val)
             }
             Methods::Method4(f) => {
                 let Some((p1, params)) = params.split_first_mut() else {
-                    return false;
+                    return Err(ParamError {}.into());
                 };
                 let Some((p2, params)) = params.split_first_mut() else {
-                    return false;
+                    return Err(ParamError {}.into());
                 };
                 let Some((p3, params)) = params.split_first_mut() else {
-                    return false;
+                    return Err(ParamError {}.into());
                 };
                 let Some((p4, params)) = params.split_first_mut() else {
-                    return false;
+                    return Err(ParamError {}.into());
                 };
                 f(addin, p1, p2, p3, p4, val)
             }
 
             Methods::Method5(f) => {
                 let Some((p1, params)) = params.split_first_mut() else {
-                    return false;
+                    return Err(ParamError {}.into());
                 };
                 let Some((p2, params)) = params.split_first_mut() else {
-                    return false;
+                    return Err(ParamError {}.into());
                 };
                 let Some((p3, params)) = params.split_first_mut() else {
-                    return false;
+                    return Err(ParamError {}.into());
                 };
                 let Some((p4, params)) = params.split_first_mut() else {
-                    return false;
+                    return Err(ParamError {}.into());
                 };
                 let Some((p5, params)) = params.split_first_mut() else {
-                    return false;
+                    return Err(ParamError {}.into());
                 };
                 f(addin, p1, p2, p3, p4, p5, val)
             }
 
             Methods::Method6(f) => {
                 let Some((p1, params)) = params.split_first_mut() else {
-                    return false;
+                    return Err(ParamError {}.into());
                 };
                 let Some((p2, params)) = params.split_first_mut() else {
-                    return false;
+                    return Err(ParamError {}.into());
                 };
                 let Some((p3, params)) = params.split_first_mut() else {
-                    return false;
+                    return Err(ParamError {}.into());
                 };
                 let Some((p4, params)) = params.split_first_mut() else {
-                    return false;
+                    return Err(ParamError {}.into());
                 };
                 let Some((p5, params)) = params.split_first_mut() else {
-                    return false;
+                    return Err(ParamError {}.into());
                 };
                 let Some((p6, params)) = params.split_first_mut() else {
-                    return false;
+                    return Err(ParamError {}.into());
                 };
                 f(addin, p1, p2, p3, p4, p5, p6, val)
             }
 
             Methods::Method7(f) => {
                 let Some((p1, params)) = params.split_first_mut() else {
-                    return false;
+                    return Err(ParamError {}.into());
                 };
                 let Some((p2, params)) = params.split_first_mut() else {
-                    return false;
+                    return Err(ParamError {}.into());
                 };
                 let Some((p3, params)) = params.split_first_mut() else {
-                    return false;
+                    return Err(ParamError {}.into());
                 };
                 let Some((p4, params)) = params.split_first_mut() else {
-                    return false;
+                    return Err(ParamError {}.into());
                 };
                 let Some((p5, params)) = params.split_first_mut() else {
-                    return false;
+                    return Err(ParamError {}.into());
                 };
                 let Some((p6, params)) = params.split_first_mut() else {
-                    return false;
+                    return Err(ParamError {}.into());
                 };
                 let Some((p7, params)) = params.split_first_mut() else {
-                    return false;
+                    return Err(ParamError {}.into());
                 };
                 f(addin, p1, p2, p3, p4, p5, p6, p7, val)
             }
@@ -184,16 +220,19 @@ pub struct MethodInfo<T> {
 
 pub struct PropInfo<T> {
     pub name: &'static [u16],
-    pub getter: Option<fn(&mut T, &mut Variant) -> bool>,
-    pub setter: Option<fn(&mut T, &ParamValue) -> bool>,
+    pub getter: Option<fn(&mut T, &mut Variant) -> AddinError>,
+    pub setter: Option<fn(&mut T, &Variant) -> AddinError>,
 }
 
+#[allow(unused_variables)]
 pub trait Addin {
     fn name() -> &'static [u16];
 
     fn get_info() -> u16 {
         2000
     }
+
+    fn save_error(&mut self, err: Option<Box<dyn Error>>) {}
 
     fn methods() -> &'static [MethodInfo<Self>]
     where
@@ -239,17 +278,30 @@ impl<T: Addin + 'static> ffi::Addin for T {
         let Some(getter) = property.getter else {
             return false;
         };
-        getter(self, val)
+        match getter(self, val) {
+            Ok(_) => true,
+            Err(err) => {
+                self.save_error(Some(err));
+                false
+            }
+        }
     }
 
-    fn set_prop_val(&mut self, num: usize, val: &ParamValue) -> bool {
+    fn set_prop_val(&mut self, num: usize, val: &Variant) -> bool {
+        self.save_error(None);
         let Some(property) = T::properties().get(num) else {
             return false;
         };
         let Some(setter) = property.setter else {
             return false;
         };
-        setter(self, val)
+        match setter(self, val) {
+            Ok(_) => true,
+            Err(err) => {
+                self.save_error(Some(err));
+                false
+            }
+        }
     }
 
     fn is_prop_readable(&mut self, num: usize) -> bool {
@@ -297,10 +349,17 @@ impl<T: Addin + 'static> ffi::Addin for T {
         params: &mut [Variant],
         val: &mut Variant,
     ) -> bool {
+        self.save_error(None);
         let Some(info) = T::methods().get(method_num) else {
             return false;
         };
 
-        info.method.call(self, params, val)
+        match info.method.call(self, params, val) {
+            Ok(_) => true,
+            Err(err) => {
+                self.save_error(Some(err));
+                false
+            }
+        }
     }
 }

@@ -1,3 +1,4 @@
+use core::fmt;
 use std::{
     ffi::{c_int, c_long, c_ulong, c_void},
     ptr::{self, NonNull},
@@ -38,11 +39,60 @@ pub struct Variant<'a> {
     variant: &'a mut TVariant,
 }
 
+#[derive(Debug)]
+pub struct AllocError(usize);
+
+impl fmt::Display for AllocError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Failed to allocate {} bytes", self.0)
+    }
+}
+
+impl std::error::Error for AllocError {}
+
+pub trait IntoStr1C {
+    fn write(&self, variant: &mut Variant) -> Result<(), AllocError>;
+}
+
+impl IntoStr1C for &[u16] {
+    fn write(&self, variant: &mut Variant) -> Result<(), AllocError> {
+        let ptr = variant.mem.alloc_str(self.len())?;
+        variant.free_memory();
+
+        unsafe { ptr::copy_nonoverlapping(self.as_ptr(), ptr.as_ptr(), self.len()) };
+
+        variant.variant.vt = VariantType::Pwstr;
+        variant.variant.value.data_str.ptr = ptr.as_ptr();
+        variant.variant.value.data_str.len = self.len() as u32;
+        Ok(())
+    }
+}
+
+impl IntoStr1C for &str {
+    fn write(&self, variant: &mut Variant) -> Result<(), AllocError> {
+        let mut buf = SmallVec::<[u16; 128]>::new();
+        buf.extend(self.encode_utf16());
+        IntoStr1C::write(&buf.as_slice(), variant)
+    }
+}
+
+#[derive(Debug)]
+pub struct IncompatibleTypeError {}
+
+impl fmt::Display for IncompatibleTypeError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Incompatible type")
+    }
+}
+
+impl std::error::Error for IncompatibleTypeError {}
+
 #[allow(dead_code)]
 impl<'a> Variant<'a> {
     pub fn get(&self) -> ParamValue {
         ParamValue::from(self.variant as &_)
     }
+
     fn free_memory(&mut self) {
         match self.variant.vt {
             VariantType::Pwstr => unsafe {
@@ -54,9 +104,22 @@ impl<'a> Variant<'a> {
             _ => (),
         }
     }
+    pub fn get_empty(&self) -> Result<(), IncompatibleTypeError> {
+        let ParamValue::Empty = self.get() else {
+            return Err(IncompatibleTypeError {});
+        };
+        Ok(())
+    }
     pub fn set_empty(&mut self) {
         self.free_memory();
         self.variant.vt = VariantType::Empty;
+    }
+
+    pub fn get_i32(&self) -> Result<i32, IncompatibleTypeError> {
+        let ParamValue::I32(value) = self.get() else {
+            return Err(IncompatibleTypeError {});
+        };
+        Ok(value)
     }
     pub fn set_i32(&mut self, val: i32) {
         self.free_memory();
@@ -64,44 +127,67 @@ impl<'a> Variant<'a> {
         self.variant.value.i32 = val;
     }
 
+    pub fn get_bool(&self) -> Result<bool, IncompatibleTypeError> {
+        let ParamValue::Bool(value) = self.get() else {
+            return Err(IncompatibleTypeError {});
+        };
+        Ok(value)
+    }
     pub fn set_bool(&mut self, val: bool) {
         self.free_memory();
         self.variant.vt = VariantType::Bool;
         self.variant.value.bool = val;
     }
 
+    pub fn get_f64(&self) -> Result<f64, IncompatibleTypeError> {
+        let ParamValue::F64(value) = self.get() else {
+            return Err(IncompatibleTypeError {});
+        };
+        Ok(value)
+    }
     pub fn set_f64(&mut self, val: f64) {
         self.free_memory();
         self.variant.vt = VariantType::R8;
         self.variant.value.f64 = val;
     }
 
+    pub fn get_date(&self) -> Result<Tm, IncompatibleTypeError> {
+        let ParamValue::Date(value) = self.get() else {
+            return Err(IncompatibleTypeError {});
+        };
+        Ok(value)
+    }
     pub fn set_date(&mut self, val: Tm) {
         self.free_memory();
         self.variant.vt = VariantType::TM;
         self.variant.value.tm = val;
     }
 
-    #[must_use]
-    pub fn set_str(&mut self, val: &[u16]) -> bool {
-        let Some(ptr) = self.mem.alloc_str(val.len()) else {
-            return false;
+    pub fn get_str1c(&self) -> Result<&[u16], IncompatibleTypeError> {
+        let ParamValue::Str(value) = self.get() else {
+            return Err(IncompatibleTypeError {});
         };
-        self.free_memory();
-
-        unsafe { ptr::copy_nonoverlapping(val.as_ptr(), ptr.as_ptr(), val.len()) };
-
-        self.variant.vt = VariantType::Pwstr;
-        self.variant.value.data_str.ptr = ptr.as_ptr();
-        self.variant.value.data_str.len = val.len() as u32;
-        true
+        Ok(value)
+    }
+    pub fn get_string(&self) -> Result<String, IncompatibleTypeError> {
+        let ParamValue::Str(value) = self.get() else {
+            return Err(IncompatibleTypeError {});
+        };
+        let value = String::from_utf16(value).map_err(|_| IncompatibleTypeError {})?;
+        Ok(value)
+    }
+    pub fn set_str1c(&mut self, val: impl IntoStr1C) -> Result<(), AllocError> {
+        val.write(self)
     }
 
-    #[must_use]
-    pub fn set_blob(&mut self, val: &[u8]) -> bool {
-        let Some(ptr) = self.mem.alloc_blob(val.len()) else {
-            return false;
+    pub fn get_blob(&self) -> Result<&[u8], IncompatibleTypeError> {
+        let ParamValue::Blob(value) = self.get() else {
+            return Err(IncompatibleTypeError {});
         };
+        Ok(value)
+    }
+    pub fn set_blob(&mut self, val: &[u8]) -> Result<(), AllocError> {
+        let ptr = self.mem.alloc_blob(val.len())?;
         self.free_memory();
 
         unsafe { ptr::copy_nonoverlapping(val.as_ptr(), ptr.as_ptr(), val.len()) };
@@ -109,11 +195,11 @@ impl<'a> Variant<'a> {
         self.variant.vt = VariantType::Blob;
         self.variant.value.data_blob.ptr = ptr.as_ptr();
         self.variant.value.data_blob.len = val.len() as u32;
-        true
+        Ok(())
     }
 
     pub fn alloc_str(&mut self, len: usize) -> Option<&'a mut [u16]> {
-        let Some(ptr) = self.mem.alloc_str(len) else {
+        let Ok(ptr) = self.mem.alloc_str(len) else {
             return None;
         };
 
@@ -127,7 +213,7 @@ impl<'a> Variant<'a> {
     }
 
     pub fn alloc_blob(&mut self, len: usize) -> Option<&'a mut [u8]> {
-        let Some(ptr) = self.mem.alloc_blob(len) else {
+        let Ok(ptr) = self.mem.alloc_blob(len) else {
             return None;
         };
         self.free_memory();
@@ -260,7 +346,7 @@ pub trait Addin {
     fn get_prop_val(&mut self, num: usize, val: &mut Variant) -> bool {
         false
     }
-    fn set_prop_val(&mut self, num: usize, val: &ParamValue) -> bool {
+    fn set_prop_val(&mut self, num: usize, val: &Variant) -> bool {
         false
     }
     fn is_prop_readable(&mut self, num: usize) -> bool {
@@ -363,7 +449,7 @@ struct LanguageExtenderBaseVTable<T: Addin> {
     find_prop: unsafe extern "system" fn(&mut This<1, T>, *const u16) -> c_long,
     get_prop_name: unsafe extern "system" fn(&mut This<1, T>, c_long, c_long) -> *const u16,
     get_prop_val: unsafe extern "system" fn(&mut This<1, T>, c_long, &mut TVariant) -> bool,
-    set_prop_val: unsafe extern "system" fn(&mut This<1, T>, c_long, &TVariant) -> bool,
+    set_prop_val: unsafe extern "system" fn(&mut This<1, T>, c_long, &mut TVariant) -> bool,
     is_prop_readable: unsafe extern "system" fn(&mut This<1, T>, c_long) -> bool,
     is_prop_writable: unsafe extern "system" fn(&mut This<1, T>, c_long) -> bool,
     get_n_methods: unsafe extern "system" fn(&mut This<1, T>) -> c_long,
@@ -394,7 +480,7 @@ unsafe extern "system" fn register_extension_as<T: Addin>(
 
     let extension_name = component.addin.register_extension_as();
 
-    let Some(ptr) = allocator.alloc_str(extension_name.len()) else {
+    let Ok(ptr) = allocator.alloc_str(extension_name.len()) else {
         return false;
     };
     ptr::copy_nonoverlapping(extension_name.as_ptr(), ptr.as_ptr(), extension_name.len());
@@ -429,7 +515,7 @@ unsafe extern "system" fn get_prop_name<T: Addin>(
     let Some(prop_name) = component.addin.get_prop_name(num as usize, alias as usize) else {
         return ptr::null();
     };
-    let Some(ptr) = allocator.alloc_str(prop_name.len()) else {
+    let Ok(ptr) = allocator.alloc_str(prop_name.len()) else {
         return ptr::null();
     };
     ptr::copy_nonoverlapping(prop_name.as_ptr(), ptr.as_ptr(), prop_name.len());
@@ -456,11 +542,14 @@ unsafe extern "system" fn get_prop_val<T: Addin>(
 unsafe extern "system" fn set_prop_val<T: Addin>(
     this: &mut This<1, T>,
     num: c_long,
-    val: &TVariant,
+    val: &mut TVariant,
 ) -> bool {
     let component = this.get_component();
-    let param = ParamValue::from(val);
-    component.addin.set_prop_val(num as usize, &param)
+    let Some(mem) = component.memory else {
+        return false;
+    };
+    let value = Variant { mem, variant: val };
+    component.addin.set_prop_val(num as usize, &value)
 }
 
 unsafe extern "system" fn is_prop_readable<T: Addin>(this: &mut This<1, T>, num: c_long) -> bool {
@@ -502,7 +591,7 @@ unsafe extern "system" fn get_method_name<T: Addin>(
     else {
         return ptr::null();
     };
-    let Some(ptr) = allocator.alloc_str(method_name.len()) else {
+    let Ok(ptr) = allocator.alloc_str(method_name.len()) else {
         return ptr::null();
     };
 
@@ -732,7 +821,7 @@ struct MemoryManager {
 }
 
 impl MemoryManager {
-    pub fn alloc_blob(&self, size: usize) -> Option<NonNull<u8>> {
+    pub fn alloc_blob(&self, size: usize) -> Result<NonNull<u8>, AllocError> {
         let mut ptr = ptr::null_mut::<c_void>();
         unsafe {
             if (self.vptr.alloc_memory)(self, &mut ptr, size as c_ulong) {
@@ -741,9 +830,10 @@ impl MemoryManager {
                 None
             }
         }
+        .ok_or(AllocError(size))
     }
 
-    pub fn alloc_str(&self, size: usize) -> Option<NonNull<u16>> {
+    pub fn alloc_str(&self, size: usize) -> Result<NonNull<u16>, AllocError> {
         let mut ptr = ptr::null_mut::<c_void>();
         unsafe {
             if (self.vptr.alloc_memory)(self, &mut ptr, size as c_ulong * 2) {
@@ -752,6 +842,7 @@ impl MemoryManager {
                 None
             }
         }
+        .ok_or(AllocError(size * 2))
     }
 
     pub fn free_str(&self, ptr: *mut *mut u16) {

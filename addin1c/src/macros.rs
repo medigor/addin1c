@@ -5,3 +5,11 @@ macro_rules! name {
         &addin1c::utf16_null!($text)
     };
 }
+
+/// Non null utf-16 static string, used for 1c-strings
+#[macro_export]
+macro_rules! str1c {
+    ($text:expr) => {
+        &addin1c::utf16!($text)
+    };
+}
