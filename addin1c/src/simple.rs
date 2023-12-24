@@ -5,9 +5,9 @@ use crate::ffi::{self, Variant};
 
 #[allow(dead_code)]
 pub enum Methods<T> {
-    Method0(fn(&mut T, &mut Variant) -> AddinError),
-    Method1(fn(&mut T, &mut Variant, &mut Variant) -> AddinError),
-    Method2(fn(&mut T, &mut Variant, &mut Variant, &mut Variant) -> AddinError),
+    Method0(fn(&mut T, &mut Variant) -> AddinResult),
+    Method1(fn(&mut T, &mut Variant, &mut Variant) -> AddinResult),
+    Method2(fn(&mut T, &mut Variant, &mut Variant, &mut Variant) -> AddinResult),
     Method3(
         fn(
             &mut T,
@@ -15,7 +15,7 @@ pub enum Methods<T> {
             &mut Variant,
             &mut Variant,
             &mut Variant,
-        ) -> AddinError,
+        ) -> AddinResult,
     ),
     Method4(
         fn(
@@ -25,7 +25,7 @@ pub enum Methods<T> {
             &mut Variant,
             &mut Variant,
             &mut Variant,
-        ) -> AddinError,
+        ) -> AddinResult,
     ),
     Method5(
         fn(
@@ -36,7 +36,7 @@ pub enum Methods<T> {
             &mut Variant,
             &mut Variant,
             &mut Variant,
-        ) -> AddinError,
+        ) -> AddinResult,
     ),
     Method6(
         fn(
@@ -48,7 +48,7 @@ pub enum Methods<T> {
             &mut Variant,
             &mut Variant,
             &mut Variant,
-        ) -> AddinError,
+        ) -> AddinResult,
     ),
     Method7(
         fn(
@@ -61,7 +61,7 @@ pub enum Methods<T> {
             &mut Variant,
             &mut Variant,
             &mut Variant,
-        ) -> AddinError,
+        ) -> AddinResult,
     ),
 }
 
@@ -76,7 +76,7 @@ impl fmt::Display for ParamError {
 
 impl std::error::Error for ParamError {}
 
-pub type AddinError = Result<(), Box<dyn std::error::Error>>;
+pub type AddinResult = Result<(), Box<dyn std::error::Error>>;
 
 impl<T> Methods<T> {
     fn params(&self) -> usize {
@@ -98,7 +98,7 @@ impl<T> Methods<T> {
         addin: &mut T,
         params: &mut [Variant],
         val: &mut Variant,
-    ) -> AddinError {
+    ) -> AddinResult {
         match self {
             Methods::Method0(f) => f(addin, val),
             Methods::Method1(f) => {
@@ -220,8 +220,8 @@ pub struct MethodInfo<T> {
 
 pub struct PropInfo<T> {
     pub name: &'static [u16],
-    pub getter: Option<fn(&mut T, &mut Variant) -> AddinError>,
-    pub setter: Option<fn(&mut T, &Variant) -> AddinError>,
+    pub getter: Option<fn(&mut T, &mut Variant) -> AddinResult>,
+    pub setter: Option<fn(&mut T, &Variant) -> AddinResult>,
 }
 
 #[allow(unused_variables)]

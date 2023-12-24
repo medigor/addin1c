@@ -1,6 +1,6 @@
 use std::error::Error;
 
-use addin1c::{name, MethodInfo, Methods, PropInfo, SimpleAddin, Variant, AddinError};
+use addin1c::{name, MethodInfo, Methods, PropInfo, SimpleAddin, Variant, AddinResult};
 
 pub struct Addin2 {
     prop1: i32,
@@ -15,7 +15,7 @@ impl Addin2 {
         }
     }
 
-    fn last_error(&mut self, value: &mut Variant) -> AddinError {
+    fn last_error(&mut self, value: &mut Variant) -> AddinResult {
         match &self.last_error {
             Some(err) => value
                 .set_str1c(err.to_string().as_str())
@@ -28,7 +28,7 @@ impl Addin2 {
         &mut self,
         param: &mut Variant,
         ret_value: &mut Variant,
-    ) -> AddinError {
+    ) -> AddinResult {
         let value = param.get_i32()?;
         self.prop1 = value;
         ret_value.set_i32(value * 2);
@@ -40,7 +40,7 @@ impl Addin2 {
         param1: &mut Variant,
         param2: &mut Variant,
         ret_value: &mut Variant,
-    ) -> AddinError {
+    ) -> AddinResult {
         let value1 = param1.get_i32()?;
         let value2 = param2.get_i32()?;
         self.prop1 = value1 + value2;
@@ -48,13 +48,13 @@ impl Addin2 {
         Ok(())
     }
 
-    fn set_prop1(&mut self, value: &Variant) -> AddinError {
+    fn set_prop1(&mut self, value: &Variant) -> AddinResult {
         let value = value.get_i32()?;
         self.prop1 = value;
         Ok(())
     }
 
-    fn get_prop1(&mut self, value: &mut Variant) -> AddinError {
+    fn get_prop1(&mut self, value: &mut Variant) -> AddinResult {
         value.set_i32(self.prop1);
         Ok(())
     }
