@@ -1,6 +1,6 @@
 use std::error::Error;
 
-use addin1c::{name, MethodInfo, Methods, PropInfo, SimpleAddin, Variant, AddinResult};
+use addin1c::{name, AddinResult, MethodInfo, Methods, PropInfo, SimpleAddin, Variant};
 
 pub struct Addin2 {
     prop1: i32,
@@ -24,11 +24,7 @@ impl Addin2 {
         }
     }
 
-    fn method1(
-        &mut self,
-        param: &mut Variant,
-        ret_value: &mut Variant,
-    ) -> AddinResult {
+    fn method1(&mut self, param: &mut Variant, ret_value: &mut Variant) -> AddinResult {
         let value = param.get_i32()?;
         self.prop1 = value;
         ret_value.set_i32(value * 2);
@@ -58,6 +54,14 @@ impl Addin2 {
         value.set_i32(self.prop1);
         Ok(())
     }
+
+    fn panic1(&mut self, _ret_value: &mut Variant) -> AddinResult {
+        panic!("Panic1")
+    }
+
+    fn panic2(&mut self, _ret_value: &mut Variant) -> AddinResult {
+        panic!("Panic{}", self.prop1)
+    }
 }
 
 impl SimpleAddin for Addin2 {
@@ -78,6 +82,14 @@ impl SimpleAddin for Addin2 {
             MethodInfo {
                 name: name!("Method2"),
                 method: Methods::Method2(Self::method2),
+            },
+            MethodInfo {
+                name: name!("Panic1"),
+                method: Methods::Method0(Self::panic1),
+            },
+            MethodInfo {
+                name: name!("Panic2"),
+                method: Methods::Method0(Self::panic2),
             },
         ]
     }

@@ -31,6 +31,11 @@
 			<CommandName>Form.Command.Тест4</CommandName>
 			<ExtendedTooltip name="Тест4РасширеннаяПодсказка" id="27"/>
 		</Button>
+		<Button name="Тест5" id="28">
+			<Type>UsualButton</Type>
+			<CommandName>Form.Command.Тест5</CommandName>
+			<ExtendedTooltip name="Тест5РасширеннаяПодсказка" id="29"/>
+		</Button>
 	</ChildItems>
 	<Attributes>
 		<Attribute name="Объект" id="1">
@@ -118,6 +123,21 @@
 				</v8:item>
 			</ToolTip>
 			<Action>Тест4</Action>
+		</Command>
+		<Command name="Тест5" id="5">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Тест5</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Тест5</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Action>Тест5</Action>
 		</Command>
 	</Commands>
 </Form>

@@ -1,5 +1,5 @@
 use core::fmt;
-use std::error::Error;
+use std::{error::Error, panic::AssertUnwindSafe};
 
 use crate::ffi::{self, Variant};
 
@@ -8,15 +8,7 @@ pub enum Methods<T> {
     Method0(fn(&mut T, &mut Variant) -> AddinResult),
     Method1(fn(&mut T, &mut Variant, &mut Variant) -> AddinResult),
     Method2(fn(&mut T, &mut Variant, &mut Variant, &mut Variant) -> AddinResult),
-    Method3(
-        fn(
-            &mut T,
-            &mut Variant,
-            &mut Variant,
-            &mut Variant,
-            &mut Variant,
-        ) -> AddinResult,
-    ),
+    Method3(fn(&mut T, &mut Variant, &mut Variant, &mut Variant, &mut Variant) -> AddinResult),
     Method4(
         fn(
             &mut T,
@@ -93,12 +85,7 @@ impl<T> Methods<T> {
     }
 
     #[allow(unused_variables)]
-    fn call(
-        &self,
-        addin: &mut T,
-        params: &mut [Variant],
-        val: &mut Variant,
-    ) -> AddinResult {
+    fn call(&self, addin: &mut T, params: &mut [Variant], val: &mut Variant) -> AddinResult {
         match self {
             Methods::Method0(f) => f(addin, val),
             Methods::Method1(f) => {
@@ -354,10 +341,30 @@ impl<T: Addin + 'static> ffi::Addin for T {
             return false;
         };
 
-        match info.method.call(self, params, val) {
-            Ok(_) => true,
+        let result = std::panic::catch_unwind(AssertUnwindSafe(|| {
+            match info.method.call(self, params, val) {
+                Ok(_) => true,
+                Err(err) => {
+                    self.save_error(Some(err));
+                    false
+                }
+            }
+        }));
+
+        match result {
+            Ok(r) => r,
             Err(err) => {
-                self.save_error(Some(err));
+                match err.downcast::<&str>() {
+                    Ok(s) => {
+                        self.save_error(Some((*s).into()));
+                    }
+                    Err(e) => match e.downcast::<String>() {
+                        Ok(s) => {
+                            self.save_error(Some((*s).into()));
+                        }
+                        Err(_) => self.save_error(Some("Unknown error".into())),
+                    },
+                };
                 false
             }
         }
