@@ -62,6 +62,10 @@ impl Addin2 {
     fn panic2(&mut self, _ret_value: &mut Variant) -> AddinResult {
         panic!("Panic{}", self.prop1)
     }
+
+    fn method_no_params(&mut self, _ret_value: &mut Variant) -> AddinResult {
+        Ok(())
+    }
 }
 
 impl SimpleAddin for Addin2 {
@@ -90,6 +94,10 @@ impl SimpleAddin for Addin2 {
             MethodInfo {
                 name: name!("Panic2"),
                 method: Methods::Method0(Self::panic2),
+            },
+            MethodInfo {
+                name: name!("MethodNoParams"),
+                method: Methods::Method0(Self::method_no_params),
             },
         ]
     }

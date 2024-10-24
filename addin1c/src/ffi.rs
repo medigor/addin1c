@@ -642,8 +642,10 @@ unsafe extern "system" fn call_as_proc<T: Addin>(
     let size_array = size_array as usize;
 
     let mut param_values = SmallVec::<[Variant; 8]>::new();
-    for variant in from_raw_parts_mut(params, size_array) {
-        param_values.push(Variant { mem, variant });
+    if size_array > 0 {
+        for variant in from_raw_parts_mut(params, size_array) {
+            param_values.push(Variant { mem, variant });
+        }
     }
 
     component
@@ -671,8 +673,10 @@ unsafe extern "system" fn call_as_func<T: Addin>(
     };
 
     let mut param_values = SmallVec::<[Variant; 8]>::new();
-    for variant in from_raw_parts_mut(params, size_array) {
-        param_values.push(Variant { mem, variant });
+    if size_array > 0 {
+        for variant in from_raw_parts_mut(params, size_array) {
+            param_values.push(Variant { mem, variant });
+        }
     }
 
     component
