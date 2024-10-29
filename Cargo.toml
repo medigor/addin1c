@@ -1,5 +1,5 @@
 [workspace]
-members = ["addin1c", "example"]
+members = ["addin1c", "addin1c-test", "example", "example-test"]
 resolver = "2"
 
 [profile.release]

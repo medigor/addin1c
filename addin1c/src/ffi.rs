@@ -261,6 +261,7 @@ impl<'a> From<&'a TVariant> for ParamValue<'a> {
 
 #[repr(u16)]
 #[allow(dead_code)]
+#[derive(Debug)]
 enum VariantType {
     Empty = 0,
     Null,
