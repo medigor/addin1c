@@ -2,6 +2,7 @@ mod ffi;
 mod memory_manager;
 mod test_addin_lib;
 mod test_addin_object;
+mod tm;
 mod variant;
 
 #[cfg(test)]
