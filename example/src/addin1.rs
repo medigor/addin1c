@@ -115,16 +115,7 @@ impl RawAddin for Addin1 {
     }
 
     fn is_prop_writable(&mut self, num: usize) -> bool {
-        match num {
-            0 => true,
-            1 => true,
-            2 => true,
-            3 => true,
-            4 => true,
-            5 => true,
-            6 => true,
-            _ => false,
-        }
+        matches!(num, 0..=6)
     }
 
     fn get_n_methods(&mut self) -> usize {
@@ -157,11 +148,7 @@ impl RawAddin for Addin1 {
     }
 
     fn has_ret_val(&mut self, num: usize) -> bool {
-        match num {
-            0 => true,
-            1 => true,
-            _ => false,
-        }
+        matches!(num, 0|1)
     }
 
     fn call_as_proc(&mut self, _num: usize, _params: &mut [Variant]) -> bool {

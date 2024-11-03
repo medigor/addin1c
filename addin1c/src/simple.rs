@@ -42,6 +42,7 @@ pub enum Methods<T> {
             &mut Variant,
         ) -> AddinResult,
     ),
+    #[allow(clippy::type_complexity)]
     Method7(
         fn(
             &mut T,

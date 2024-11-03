@@ -732,6 +732,9 @@ unsafe extern "system" fn destroy<T: Addin>(component: *mut *mut Component<T>) {
     drop(comp);
 }
 
+/// # Safety
+/// 
+/// Component must be non-null.
 pub unsafe fn create_component<T: Addin>(component: *mut *mut c_void, addin: T) -> c_long {
     let vptr1 = Box::new(InitDoneBaseVTable {
         dtor: 0,
@@ -793,6 +796,9 @@ pub unsafe fn create_component<T: Addin>(component: *mut *mut c_void, addin: T) 
     1
 }
 
+/// # Safety
+///
+/// Component must be returned from `create_component`, the function must be called once for each component.
 pub unsafe fn destroy_component(component: *mut *mut c_void) -> c_long {
     #[repr(C)]
     struct ComponentWrapper {
