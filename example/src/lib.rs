@@ -12,11 +12,11 @@ use addin2::Addin2;
 
 pub static PLATFORM_CAPABILITIES: AtomicI32 = AtomicI32::new(-1);
 
-#[allow(non_snake_case)]
-#[no_mangle]
 /// # Safety
 ///
 /// Component must be non-null.
+#[allow(non_snake_case)]
+#[no_mangle]
 pub unsafe extern "C" fn GetClassObject(name: *const u16, component: *mut *mut c_void) -> c_long {
     match *name as u8 {
         b'1' => {
@@ -31,11 +31,11 @@ pub unsafe extern "C" fn GetClassObject(name: *const u16, component: *mut *mut c
     }
 }
 
-#[allow(non_snake_case)]
-#[no_mangle]
 /// # Safety
 ///
 /// Component must be returned from `GetClassObject`, the function must be called once for each component.
+#[allow(non_snake_case)]
+#[no_mangle]
 pub unsafe extern "C" fn DestroyObject(component: *mut *mut c_void) -> c_long {
     destroy_component(component)
 }
