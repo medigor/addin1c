@@ -10,7 +10,7 @@ use addin1::Addin1;
 use addin1c::{create_component, destroy_component, name, AttachType};
 use addin2::Addin2;
 
-pub static mut PLATFORM_CAPABILITIES: AtomicI32 = AtomicI32::new(-1);
+pub static PLATFORM_CAPABILITIES: AtomicI32 = AtomicI32::new(-1);
 
 #[allow(non_snake_case)]
 #[no_mangle]
@@ -50,7 +50,7 @@ pub extern "C" fn GetClassNames() -> *const u16 {
 #[allow(non_snake_case)]
 #[no_mangle]
 pub extern "C" fn SetPlatformCapabilities(capabilities: c_int) -> c_int {
-    unsafe { PLATFORM_CAPABILITIES.store(capabilities, Ordering::Relaxed) };
+    PLATFORM_CAPABILITIES.store(capabilities, Ordering::Relaxed);
     3
 }
 
