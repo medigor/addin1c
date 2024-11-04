@@ -132,7 +132,7 @@ impl Variant {
         unsafe { SetValVariantBool(self.as_ptr(), val) };
     }
 
-    pub fn create_bool(val: bool) -> Variant {
+    pub fn new_bool(val: bool) -> Variant {
         let mut variant = Variant::new();
         variant.set_bool(val);
         variant
@@ -150,7 +150,7 @@ impl Variant {
         unsafe { SetValVariantI4(self.as_ptr(), val) };
     }
 
-    pub fn create_i32(val: i32) -> Variant {
+    pub fn new_i32(val: i32) -> Variant {
         let mut variant = Variant::new();
         variant.set_i32(val);
         variant
@@ -168,7 +168,7 @@ impl Variant {
         unsafe { SetValVariantR8(self.as_ptr(), val) };
     }
 
-    pub fn create_f64(val: f64) -> Variant {
+    pub fn new_f64(val: f64) -> Variant {
         let mut variant = Variant::new();
         variant.set_f64(val);
         variant
@@ -189,7 +189,7 @@ impl Variant {
         unsafe { SetValVariantString(self.as_ptr(), val.as_ptr(), val.len() as u32) };
     }
 
-    pub fn create_str(val: &[u16]) -> Variant {
+    pub fn new_str(val: &[u16]) -> Variant {
         let mut variant = Variant::new();
         variant.set_str(val);
         variant
