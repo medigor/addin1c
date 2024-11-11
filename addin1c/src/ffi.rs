@@ -716,7 +716,7 @@ unsafe extern "system" fn destroy<T: Addin>(component: *mut *mut Component<T>) {
 }
 
 /// # Safety
-/// 
+///
 /// Component must be non-null.
 pub unsafe fn create_component<T: Addin>(component: *mut *mut c_void, addin: T) -> c_long {
     let vptr1 = Box::new(InitDoneBaseVTable {
