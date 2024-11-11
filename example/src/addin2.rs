@@ -1,6 +1,7 @@
 use std::error::Error;
 
 use addin1c::{name, AddinResult, MethodInfo, Methods, PropInfo, SimpleAddin, Variant};
+use chrono::Utc;
 
 pub struct Addin2 {
     prop1: i32,
@@ -66,6 +67,11 @@ impl Addin2 {
     fn method_no_params(&mut self, _ret_value: &mut Variant) -> AddinResult {
         Ok(())
     }
+
+    fn utc(&mut self, ret_value: &mut Variant) -> AddinResult {
+        ret_value.set_date(Utc::now().into());
+        Ok(())
+    }
 }
 
 impl SimpleAddin for Addin2 {
@@ -98,6 +104,10 @@ impl SimpleAddin for Addin2 {
             MethodInfo {
                 name: name!("MethodNoParams"),
                 method: Methods::Method0(Self::method_no_params),
+            },
+            MethodInfo {
+                name: name!("Utc"),
+                method: Methods::Method0(Self::utc),
             },
         ]
     }

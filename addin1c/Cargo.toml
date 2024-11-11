@@ -11,5 +11,9 @@ keywords = ["1c-enterpirse", "native-api", "addin"]
 readme = "README.md"
 
 [dependencies]
-smallvec = "1.11"
+smallvec = "1.13"
 utf16_lit = "2.0"
+chrono = { version = "0.4", optional = true }
+
+[features]
+chrono = ["dep:chrono"]

@@ -7,4 +7,5 @@ edition = "2021"
 crate-type = ["cdylib"]
 
 [dependencies]
-addin1c = { path = "../addin1c" }
+addin1c = { path = "../addin1c", features = ["chrono"] }
+chrono = "*"
