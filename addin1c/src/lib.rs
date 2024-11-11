@@ -1,14 +1,25 @@
+mod connection;
 mod ffi;
 mod macros;
+mod memory_manager;
 mod simple;
 mod tm;
+mod tvariant;
+mod variant;
 
-pub use ffi::{
-    create_component, destroy_component, Addin as RawAddin, AttachType, Connection,
-    IncompatibleTypeError, ParamValue, Variant,
-};
-pub use simple::{Addin as SimpleAddin, MethodInfo, Methods, PropInfo, AddinResult};
+pub use connection::Connection;
+pub use ffi::{create_component, destroy_component, Addin as RawAddin};
+pub use simple::{Addin as SimpleAddin, AddinResult, MethodInfo, Methods, PropInfo};
 pub use tm::Tm;
+pub use variant::{IncompatibleTypeError, ParamValue, Variant};
 
 pub use utf16_lit::utf16;
 pub use utf16_lit::utf16_null;
+
+#[repr(C)]
+#[derive(Debug)]
+pub enum AttachType {
+    NotIsolated = 1,
+    Isolated,
+    Any,
+}

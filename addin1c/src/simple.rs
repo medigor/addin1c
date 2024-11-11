@@ -1,7 +1,10 @@
 use core::fmt;
 use std::{error::Error, panic::AssertUnwindSafe};
 
-use crate::ffi::{self, Variant};
+use crate::{
+    ffi::{self},
+    Variant,
+};
 
 #[allow(dead_code)]
 pub enum Methods<T> {
