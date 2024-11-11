@@ -40,17 +40,17 @@ mod chrono {
         }
     }
 
-    impl Into<DateTime<Utc>> for Tm {
-        fn into(self) -> DateTime<Utc> {
-            Into::<NaiveDateTime>::into(self).and_utc()
+    impl From<Tm> for DateTime<Utc> {
+        fn from(val: Tm) -> Self {
+            Into::<NaiveDateTime>::into(val).and_utc()
         }
     }
 
-    impl Into<NaiveDateTime> for Tm {
-        fn into(self) -> NaiveDateTime {
-            NaiveDate::from_ymd_opt(1900 + self.year, 1 + self.mon as u32, self.mday as _)
+    impl From<Tm> for NaiveDateTime {
+        fn from(val: Tm) -> Self {
+            NaiveDate::from_ymd_opt(1900 + val.year, 1 + val.mon as u32, val.mday as _)
                 .expect("Incorrect date")
-                .and_hms_opt(self.hour as _, self.min as _, self.sec as _)
+                .and_hms_opt(val.hour as _, val.min as _, val.sec as _)
                 .expect("Incorrect date")
         }
     }
