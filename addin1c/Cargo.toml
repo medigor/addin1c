@@ -1,6 +1,6 @@
 [package]
 name = "addin1c"
-version = "0.4.1"
+version = "0.5.0"
 edition = "2021"
 description = "Helper for creating 1C:Enterpirse 8 add-ins with Native API technology"
 license = "MIT"
