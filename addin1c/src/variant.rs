@@ -198,7 +198,7 @@ pub enum ParamValue<'a> {
 }
 
 impl<'a> From<&'a TVariant> for ParamValue<'a> {
-    fn from(param: &'a TVariant) -> ParamValue {
+    fn from(param: &'a TVariant) -> ParamValue<'a> {
         unsafe {
             match param.vt {
                 VariantType::Empty => Self::Empty,
