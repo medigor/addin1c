@@ -1,6 +1,6 @@
 [package]
 name = "addin1c-test"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 description = "library for testing 1C:Enterpirse 8 add-ins"
 license = "MIT"

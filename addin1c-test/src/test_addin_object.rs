@@ -1,4 +1,4 @@
-use std::{error::Error, ffi::c_void, ptr::null_mut};
+use std::{error::Error, ffi::c_void, ptr::{null, null_mut}};
 
 use crate::{
     ffi::{
@@ -84,7 +84,7 @@ impl<'a> TestAddinObject<'a> {
                 self.ptr,
                 num,
                 result.as_ptr(),
-                params[0].as_ptr(),
+                if PARAMS > 0  {params[0].as_ptr()} else {null()},
                 PARAMS as _,
             )
         } {
