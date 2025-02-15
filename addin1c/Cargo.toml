@@ -7,7 +7,7 @@ license = "MIT"
 categories = []
 repository = "https://github.com/medigor/addin1c"
 homepage = "https://github.com/medigor/addin1c"
-keywords = ["1c-enterpirse", "native-api", "addin"]
+keywords = ["1c-enterprise", "native-api", "addin"]
 readme = "README.md"
 
 [dependencies]
