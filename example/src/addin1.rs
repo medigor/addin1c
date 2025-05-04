@@ -1,6 +1,6 @@
-use addin1c::{name, RawAddin, Tm, Variant};
+use addin1c::{name, CStr1C, RawAddin, Tm, Variant};
 
-const PROPS: &[&[u16]] = &[
+const PROPS: &[&CStr1C] = &[
     name!("Test"),
     name!("PropI32"),
     name!("PropF64"),
@@ -10,7 +10,7 @@ const PROPS: &[&[u16]] = &[
     name!("PropBlob"),
 ];
 
-const METHODS: &[&[u16]] = &[name!("Method1"), name!("Method2")];
+const METHODS: &[&CStr1C] = &[name!("Method1"), name!("Method2")];
 
 pub struct Addin1 {
     test: i32,
@@ -41,7 +41,7 @@ impl Drop for Addin1 {
 }
 
 impl RawAddin for Addin1 {
-    fn register_extension_as(&mut self) -> &'static [u16] {
+    fn register_extension_as(&mut self) -> &'static CStr1C {
         name!("Class1")
     }
 
@@ -49,11 +49,11 @@ impl RawAddin for Addin1 {
         PROPS.len()
     }
 
-    fn find_prop(&mut self, name: &[u16]) -> Option<usize> {
+    fn find_prop(&mut self, name: &CStr1C) -> Option<usize> {
         PROPS.iter().position(|&x| x == name)
     }
 
-    fn get_prop_name(&mut self, num: usize, _alias: usize) -> Option<&'static [u16]> {
+    fn get_prop_name(&mut self, num: usize, _alias: usize) -> Option<&'static CStr1C> {
         PROPS.get(num).copied()
     }
 
@@ -122,11 +122,11 @@ impl RawAddin for Addin1 {
         METHODS.len()
     }
 
-    fn find_method(&mut self, name: &[u16]) -> Option<usize> {
+    fn find_method(&mut self, name: &CStr1C) -> Option<usize> {
         METHODS.iter().position(|&x| x == name)
     }
 
-    fn get_method_name(&mut self, num: usize, _alias: usize) -> Option<&'static [u16]> {
+    fn get_method_name(&mut self, num: usize, _alias: usize) -> Option<&'static CStr1C> {
         METHODS.get(num).copied()
     }
 
@@ -148,7 +148,7 @@ impl RawAddin for Addin1 {
     }
 
     fn has_ret_val(&mut self, num: usize) -> bool {
-        matches!(num, 0|1)
+        matches!(num, 0 | 1)
     }
 
     fn call_as_proc(&mut self, _num: usize, _params: &mut [Variant]) -> bool {

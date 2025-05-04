@@ -2,7 +2,7 @@
 #[macro_export]
 macro_rules! name {
     ($text:expr) => {
-        &addin1c::utf16_null!($text)
+        const { unsafe { addin1c::CStr1C::from_bytes_unchecked(&addin1c::utf16_null!($text)) } }
     };
 }
 

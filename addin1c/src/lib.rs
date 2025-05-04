@@ -1,4 +1,5 @@
 mod connection;
+mod cstr1c;
 mod ffi;
 mod macros;
 mod memory_manager;
@@ -8,6 +9,7 @@ mod tvariant;
 mod variant;
 
 pub use connection::Connection;
+pub use cstr1c::{CStr1C, CString1C};
 pub use ffi::{create_component, destroy_component, Addin as RawAddin};
 pub use simple::{Addin as SimpleAddin, AddinResult, MethodInfo, Methods, PropInfo};
 pub use tm::Tm;

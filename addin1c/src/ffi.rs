@@ -6,7 +6,9 @@ use std::{
 
 use smallvec::SmallVec;
 
-use crate::{memory_manager::MemoryManager, tvariant::TVariant, variant::Variant, Connection};
+use crate::{
+    memory_manager::MemoryManager, tvariant::TVariant, variant::Variant, CStr1C, Connection,
+};
 
 #[allow(unused_variables)]
 pub trait Addin {
@@ -19,14 +21,14 @@ pub trait Addin {
         2000
     }
     fn done(&mut self) {}
-    fn register_extension_as(&mut self) -> &'static [u16];
+    fn register_extension_as(&mut self) -> &CStr1C;
     fn get_n_props(&mut self) -> usize {
         0
     }
-    fn find_prop(&mut self, name: &[u16]) -> Option<usize> {
+    fn find_prop(&mut self, name: &CStr1C) -> Option<usize> {
         None
     }
-    fn get_prop_name(&mut self, num: usize, alias: usize) -> Option<&'static [u16]> {
+    fn get_prop_name(&mut self, num: usize, alias: usize) -> Option<&'static CStr1C> {
         None
     }
     fn get_prop_val(&mut self, num: usize, val: &mut Variant) -> bool {
@@ -44,10 +46,10 @@ pub trait Addin {
     fn get_n_methods(&mut self) -> usize {
         0
     }
-    fn find_method(&mut self, name: &[u16]) -> Option<usize> {
+    fn find_method(&mut self, name: &CStr1C) -> Option<usize> {
         None
     }
-    fn get_method_name(&mut self, num: usize, alias: usize) -> Option<&'static [u16]> {
+    fn get_method_name(&mut self, num: usize, alias: usize) -> Option<&'static CStr1C> {
         None
     }
     fn get_n_params(&mut self, num: usize) -> usize {
@@ -79,8 +81,8 @@ struct This<const OFFSET: usize, T: Addin> {
     ptr: *mut Component<T>,
 }
 
-impl<'a, const OFFSET: usize, T: Addin> This<OFFSET, T> {
-    unsafe fn get_component(&mut self) -> &'a mut Component<T> {
+impl<const OFFSET: usize, T: Addin> This<OFFSET, T> {
+    unsafe fn get_component(&mut self) -> &mut Component<T> {
         let new_ptr = (self as *mut This<OFFSET, T> as *mut c_void)
             .sub(OFFSET * std::mem::size_of::<usize>());
         &mut *(new_ptr as *mut Component<T>)
@@ -182,7 +184,7 @@ unsafe extern "system" fn get_n_props<T: Addin>(this: &mut This<1, T>) -> c_long
 
 unsafe extern "system" fn find_prop<T: Addin>(this: &mut This<1, T>, name: *const u16) -> c_long {
     let component = this.get_component();
-    let name = get_str(name);
+    let name = CStr1C::from_bytes_unchecked(get_str(name));
     match component.addin.find_prop(name) {
         Some(i) => i as c_long,
         None => -1,
@@ -255,7 +257,7 @@ unsafe extern "system" fn get_n_methods<T: Addin>(this: &mut This<1, T>) -> c_lo
 
 unsafe extern "system" fn find_method<T: Addin>(this: &mut This<1, T>, name: *const u16) -> c_long {
     let component = this.get_component();
-    let name = get_str(name);
+    let name = CStr1C::from_bytes_unchecked(get_str(name));
     match component.addin.find_method(name) {
         Some(i) => i as c_long,
         None => -1,

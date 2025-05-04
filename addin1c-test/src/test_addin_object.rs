@@ -95,7 +95,7 @@ impl<'a> TestAddinObject<'a> {
     }
 }
 
-impl<'a> Drop for TestAddinObject<'a> {
+impl Drop for TestAddinObject<'_> {
     fn drop(&mut self) {
         let _ = self.lib.destroy_object(&mut self.ptr);
     }

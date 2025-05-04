@@ -3,7 +3,7 @@ use std::{error::Error, panic::AssertUnwindSafe};
 
 use crate::{
     ffi::{self},
-    Variant,
+    CStr1C, Connection, Variant,
 };
 
 #[allow(dead_code)]
@@ -205,19 +205,23 @@ impl<T> Methods<T> {
 }
 
 pub struct MethodInfo<T> {
-    pub name: &'static [u16],
+    pub name: &'static CStr1C,
     pub method: Methods<T>,
 }
 
 pub struct PropInfo<T> {
-    pub name: &'static [u16],
+    pub name: &'static CStr1C,
     pub getter: Option<fn(&mut T, &mut Variant) -> AddinResult>,
     pub setter: Option<fn(&mut T, &Variant) -> AddinResult>,
 }
 
 #[allow(unused_variables)]
 pub trait Addin {
-    fn name() -> &'static [u16];
+    fn name() -> &'static CStr1C;
+
+    fn init(&mut self, interface: &'static Connection) -> bool {
+        true
+    }
 
     fn get_info() -> u16 {
         2000
@@ -242,8 +246,12 @@ pub trait Addin {
 
 #[allow(unused_variables)]
 impl<T: Addin + 'static> ffi::Addin for T {
-    fn register_extension_as(&mut self) -> &'static [u16] {
+    fn register_extension_as(&mut self) -> &'static CStr1C {
         T::name()
+    }
+
+    fn init(&mut self, interface: &'static Connection) -> bool {
+        self.init(interface)
     }
 
     fn get_info(&mut self) -> u16 {
@@ -254,11 +262,11 @@ impl<T: Addin + 'static> ffi::Addin for T {
         T::properties().len()
     }
 
-    fn find_prop(&mut self, name: &[u16]) -> Option<usize> {
+    fn find_prop(&mut self, name: &CStr1C) -> Option<usize> {
         T::properties().iter().position(|x| x.name == name)
     }
 
-    fn get_prop_name(&mut self, num: usize, alias: usize) -> Option<&'static [u16]> {
+    fn get_prop_name(&mut self, num: usize, alias: usize) -> Option<&'static CStr1C> {
         T::properties().get(num).map(|x| &x.name).copied()
     }
 
@@ -307,11 +315,11 @@ impl<T: Addin + 'static> ffi::Addin for T {
         T::methods().len()
     }
 
-    fn find_method(&mut self, name: &[u16]) -> Option<usize> {
+    fn find_method(&mut self, name: &CStr1C) -> Option<usize> {
         T::methods().iter().position(|x| x.name == name)
     }
 
-    fn get_method_name(&mut self, num: usize, alias: usize) -> Option<&'static [u16]> {
+    fn get_method_name(&mut self, num: usize, alias: usize) -> Option<&'static CStr1C> {
         T::methods().get(num).map(|x| &x.name).copied()
     }
 

@@ -1,11 +1,15 @@
-use std::error::Error;
+use std::{error::Error, thread, time::Duration};
 
-use addin1c::{name, AddinResult, MethodInfo, Methods, PropInfo, SimpleAddin, Variant};
+use addin1c::{
+    cstr1c, name, AddinResult, CStr1C, CString1C, Connection, MethodInfo, Methods, PropInfo,
+    SimpleAddin, Variant,
+};
 use chrono::Utc;
 
 pub struct Addin2 {
     prop1: i32,
     last_error: Option<Box<dyn Error>>,
+    interface: Option<&'static Connection>,
 }
 
 impl Addin2 {
@@ -13,6 +17,7 @@ impl Addin2 {
         Addin2 {
             prop1: 0,
             last_error: None,
+            interface: None,
         }
     }
 
@@ -72,11 +77,49 @@ impl Addin2 {
         ret_value.set_date(Utc::now().into());
         Ok(())
     }
+
+    fn call_external_event(&mut self, ret_value: &mut Variant) -> AddinResult {
+        if let Some(interface) = self.interface {
+            let buffer_depth1 = interface.get_event_buffer_depth();
+            interface.set_event_buffer_depth(100);
+            let buffer_depth2 = interface.get_event_buffer_depth();
+            let result =
+                interface.external_event(cstr1c!("Addin2"), cstr1c!("Message1"), cstr1c!("Test1"));
+            ret_value.set_str1c(format!(
+                "result: {result}, buffer_depth1: {buffer_depth1}, buffer_depth2: {buffer_depth2}"
+            ))?;
+
+            thread::spawn(move || {
+                let interface = interface;
+                for i in 2..6 {
+                    thread::sleep(Duration::from_millis(500));
+                    interface.external_event(
+                        cstr1c!("Addin2"),
+                        CString1C::from_str(format!("Message{i}").as_str()),
+                        CString1C::from_str(format!("Test{i}").as_str()),
+                    );
+                }
+                interface.external_event(
+                    cstr1c!("Addin2"),
+                    cstr1c!("Shutdown"),
+                    cstr1c!("Shutdown"),
+                );
+            });
+        } else {
+            ret_value.set_str1c("нет интерфейса")?;
+        }
+        Ok(())
+    }
 }
 
 impl SimpleAddin for Addin2 {
-    fn name() -> &'static [u16] {
+    fn name() -> &'static CStr1C {
         name!("Class2")
+    }
+
+    fn init(&mut self, interface: &'static Connection) -> bool {
+        self.interface = Some(interface);
+        true
     }
 
     fn save_error(&mut self, err: Option<Box<dyn Error>>) {
@@ -108,6 +151,10 @@ impl SimpleAddin for Addin2 {
             MethodInfo {
                 name: name!("Utc"),
                 method: Methods::Method0(Self::utc),
+            },
+            MethodInfo {
+                name: name!("CallExternalEvent"),
+                method: Methods::Method0(Self::call_external_event),
             },
         ]
     }
