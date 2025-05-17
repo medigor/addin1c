@@ -95,8 +95,8 @@ impl Addin2 {
                     thread::sleep(Duration::from_millis(500));
                     interface.external_event(
                         cstr1c!("Addin2"),
-                        CString1C::new(format!("Message{i}").as_str()),
-                        CString1C::new(format!("Test{i}").as_str()),
+                        CString1C::new(&format!("Message{i}")),
+                        CString1C::new(&format!("Test{i}")),
                     );
                 }
                 interface.external_event(

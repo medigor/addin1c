@@ -1,7 +1,7 @@
 use std::{
     ffi::{c_long, c_void},
     ptr::{self},
-    slice::{from_raw_parts, from_raw_parts_mut},
+    slice::from_raw_parts_mut,
 };
 
 use smallvec::SmallVec;
@@ -193,7 +193,7 @@ unsafe extern "system" fn find_prop<const OFFSET: usize, T: Addin>(
     name: *const u16,
 ) -> c_long {
     let component = this.get_component();
-    let name = CStr1C::from_bytes_unchecked(get_str(name));
+    let name = CStr1C::from_ptr(name);
     match component.addin.find_prop(name) {
         Some(i) => i as c_long,
         None => -1,
@@ -277,7 +277,7 @@ unsafe extern "system" fn find_method<const OFFSET: usize, T: Addin>(
     name: *const u16,
 ) -> c_long {
     let component = this.get_component();
-    let name = CStr1C::from_bytes_unchecked(get_str(name));
+    let name = CStr1C::from_ptr(name);
     match component.addin.find_method(name) {
         Some(i) => i as c_long,
         None => -1,
@@ -411,7 +411,7 @@ unsafe extern "system" fn set_locale<const OFFSET: usize, T: Addin>(
     loc: *const u16,
 ) {
     let component = this.get_component();
-    let loc = get_str(loc);
+    let loc = CStr1C::from_ptr(loc);
     component.addin.set_locale(loc)
 }
 
@@ -428,7 +428,7 @@ unsafe extern "system" fn set_user_interface_language_code<const OFFSET: usize, 
     lang: *const u16,
 ) {
     let component = this.get_component();
-    let lang = get_str(lang);
+    let lang = CStr1C::from_ptr(lang);
     component.addin.set_user_interface_language_code(lang)
 }
 
@@ -531,17 +531,4 @@ pub unsafe fn destroy_component(component: *mut *mut c_void) -> c_long {
     *component = ptr::null_mut();
 
     0
-}
-
-unsafe fn get_str<'a>(s: *const u16) -> &'a [u16] {
-    unsafe fn strlen(s: *const u16) -> usize {
-        let mut i = 0;
-        while *s.add(i) != 0 {
-            i += 1;
-        }
-        i + 1
-    }
-
-    let len = strlen(s);
-    from_raw_parts(s, len)
 }

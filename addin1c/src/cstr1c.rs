@@ -1,10 +1,10 @@
-use std::ops::Deref;
+use std::{ops::Deref, slice::from_raw_parts};
 
 #[derive(PartialEq)]
 pub struct CStr1C([u16]);
 
 impl CStr1C {
-    /// Unsafely creates a C string for 1C wrapper from a byte slice.
+    /// Wraps a raw 1C string with a safe string wrapper.
     ///
     /// # SAFETY
     ///
@@ -12,6 +12,21 @@ impl CStr1C {
     pub const unsafe fn from_bytes_unchecked(bytes: &[u16]) -> &Self {
         debug_assert!(!bytes.is_empty() && bytes[bytes.len() - 1] == 0);
         unsafe { &*(bytes as *const [u16] as *const CStr1C) }
+    }
+
+    /// Wraps a raw 1C string with a safe string wrapper.
+    ///
+    /// # SAFETY
+    ///
+    /// The memory pointed to by ptr must contain a valid nul-terminated string.
+    pub unsafe fn from_ptr<'a>(s: *const u16) -> &'a Self {
+        let mut len = 0;
+        while *s.add(len) != 0 {
+            len += 1;
+        }
+        len += 1;
+
+        CStr1C::from_bytes_unchecked(from_raw_parts(s, len))
     }
 }
 
@@ -41,16 +56,16 @@ impl CString1C {
 }
 
 impl Deref for CString1C {
-    type Target = [u16];
+    type Target = CStr1C;
 
     fn deref(&self) -> &Self::Target {
-        &self.0
+        unsafe { CStr1C::from_bytes_unchecked(self.0.as_ref()) }
     }
 }
 
 impl AsRef<CStr1C> for CString1C {
     fn as_ref(&self) -> &CStr1C {
-        unsafe { CStr1C::from_bytes_unchecked(self.0.as_ref()) }
+        self
     }
 }
 
