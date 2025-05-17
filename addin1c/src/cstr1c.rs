@@ -32,7 +32,7 @@ impl Deref for CStr1C {
 pub struct CString1C(Vec<u16>);
 
 impl CString1C {
-    pub fn from_str(str: &str) -> Self {
+    pub fn new(str: &str) -> Self {
         let mut buf = Vec::with_capacity(str.len() + 1);
         buf.extend(str.encode_utf16());
         buf.push(0);
@@ -56,7 +56,7 @@ impl AsRef<CStr1C> for CString1C {
 
 impl From<&str> for CString1C {
     fn from(value: &str) -> Self {
-        CString1C::from_str(value)
+        CString1C::new(value)
     }
 }
 
